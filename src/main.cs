@@ -4,6 +4,6 @@ class Program
     {
         Console.Write("$ ");
         string? input = Console.ReadLine();
-        Console.WriteLine($"Invalid command! {input} is not valid");
+        Console.WriteLine($"{input}: command not found");
     }
 }
