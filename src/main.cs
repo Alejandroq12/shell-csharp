@@ -7,7 +7,7 @@ class Program
           Console.Write("$ ");
           string? input = Console.ReadLine();
           Console.WriteLine($"{input}: command not found");
-          Console.WriteLine("exit");
+          Console.WriteLine("$ ");
           Environment.Exit(0);
         }
     }
