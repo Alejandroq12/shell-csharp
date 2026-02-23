@@ -10,6 +10,11 @@ class Program
           {
             Environment.Exit(0);
           }
+
+          if (input == "echo")
+          {
+            Console.WriteLine(input);
+          }
           Console.WriteLine($"{input}: command not found");
         }
     }
