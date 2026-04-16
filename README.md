@@ -1,6 +1,6 @@
 # shell-csharp
 
-> A POSIX style shell implemented from scratch in C# and .NET 9. Built as a self directed systems programming exercise through the CodeCrafters "Build Your Own Shell" challenge. Actively in development.
+> A POSIX style shell implemented from scratch in C# and .NET 9. Interactive REPL, builtin commands, external process execution, and shell parsing. Actively in development.
 
 <p>
   <img src="https://img.shields.io/badge/status-in%20progress-blue" alt="status">
@@ -13,25 +13,23 @@
 
 ## The Problem
 
-A Unix shell is one of the most commonly used pieces of software on the planet, and most developers never stop to think about how it actually works. What happens between pressing Enter and seeing output? How does the shell find the right binary? How does it handle quoting, pipes, and redirection? The only way to really understand those answers is to build one.
+A Unix shell is one of the most commonly used pieces of software in the world, and most developers never stop to think about how it actually works. What happens between pressing Enter and seeing output? How does the shell find the right binary on the system? How does quoting work when strings contain spaces, escapes, or nested quotes? What is the precise sequence of system calls that spawns a child process, inherits its file descriptors, and reports its exit code? The only way to understand those answers with any depth is to build a shell.
 
 ## The Approach
 
-I am implementing a POSIX style shell from scratch in C# on .NET 9. The CodeCrafters platform provides the test harness and the challenge specification, but every line of the implementation is my own. No tutorial walks through the solution. Each stage introduces a new requirement (a new builtin, a new parsing rule, a new I/O behavior), and I have to figure out how to meet it.
-
-The goal is not just a working shell. It is internalizing how a shell interprets commands, manages processes, and handles the details that users take for granted. That knowledge transfers directly to backend work, where process management, parsing, and I/O are daily concerns.
+A POSIX style shell in C# on .NET 9, built from scratch. The scope includes a read eval print loop, a set of builtin commands, external program execution via `PATH` lookup, quoting and escape rules, and I/O redirection. Each of those subsystems is a small exercise in parsing, process management, or I/O that has been written about for decades in operating systems textbooks. Implementing them in modern C# produces a working program and a much deeper understanding of the platform the shell runs on.
 
 ---
 
 ## Current Status
 
-This is an actively developed project. Progress is tracked below and updated as stages are completed.
+This is an actively developed project. The list below is updated as stages are completed.
 
 ### Completed
 
-* Project scaffolding with .NET 9 and the CodeCrafters runner
-* Basic REPL loop that reads input, dispatches on commands, and returns to the prompt
+* Interactive REPL loop that reads input, dispatches on commands, and returns to the prompt
 * Initial command recognition for a small set of inputs
+* Project scaffolding on .NET 9 with a shell runner script
 
 ### In progress
 
@@ -39,10 +37,10 @@ This is an actively developed project. Progress is tracked below and updated as 
 
 ### Planned
 
-* Execution of external programs via `PATH` lookup
-* Quoting rules: single quotes, double quotes, and backslash escapes
+* External program execution via `PATH` lookup
+* Quoting rules: single quotes, double quotes, backslash escapes
 * I/O redirection: `>`, `>>`, `2>`, `<`
-* Piping between commands with `|`
+* Command piping with `|`
 * Command history and line editing
 
 ---
@@ -51,15 +49,15 @@ This is an actively developed project. Progress is tracked below and updated as 
 
 ### Why C# and .NET 9
 
-Most shell challenge solutions are written in C, Go, or Rust. Choosing C# makes the exercise harder in some places (fewer reference implementations to compare against) and forces me to work closer to the platform than typical .NET application code requires. This is deliberate. I want to stretch my .NET knowledge into territory where I am using `Process`, `Environment`, and `System.IO` primitives the way they were designed to be used, not hidden behind ASP.NET abstractions.
+Most shell implementations are written in C, Go, or Rust. Choosing C# for this is deliberate. It forces me to work closer to the platform than typical .NET application code requires, using `System.Diagnostics.Process`, `Environment`, and `System.IO` primitives the way they were designed to be used rather than hidden behind ASP.NET abstractions. It is a chance to stretch my .NET knowledge into systems level territory that most web focused backend developers never touch.
 
 ### Why build instead of read
 
-I could have read the source of an existing shell. That would have taught me less. Building something under test, where every stage has pass or fail feedback, forces me to understand each piece deeply enough to produce it rather than just recognize it. The wrong implementations fail tests. The right implementations pass. This is how I want to learn systems concepts.
+I could have read the source of an existing shell. That would have taught me less. Building something under test, where each feature has pass or fail feedback, forces a level of understanding that reading never produces. Wrong implementations fail tests. Right ones pass. At the end of each stage I know exactly which corner cases I handled and which I did not, because the test suite told me.
 
-### Why CodeCrafters
+### Why a single process, synchronous design first
 
-The platform provides the specification and the test harness, which removes the ambiguity of "am I done." Beyond that, I write all the code myself with no guided walkthroughs. It is the closest thing to a real engineering task that a self directed learning platform offers: clear requirements, verifiable completion, and full implementation freedom.
+The first working version keeps everything in a single process with synchronous command dispatch. Adding asynchronous I/O or multi process piping from day one would have buried the core parser and REPL logic under concurrency concerns. The plan is to finish the synchronous version across all builtins and redirection, then introduce pipes and concurrency in a second pass when the foundation is solid. This is the same principle I apply in backend service design: get the data flow correct first, then optimize.
 
 ---
 
@@ -69,7 +67,6 @@ The platform provides the specification and the test harness, which removes the 
 |-------|-----------|
 | Language | C# 12 |
 | Runtime | .NET 9 |
-| Test harness | CodeCrafters test runner |
 | Target platform | POSIX (Linux, macOS, WSL) |
 
 ---
@@ -91,29 +88,27 @@ The shell starts an interactive prompt. Type commands as you would in any shell.
 ## Project Structure
 
 ```
-src/                Shell implementation (main entry point and command handling)
-shell.sh            Wrapper script that builds and runs the shell
-codecrafters.yml    Platform configuration for the test runner
-.codecrafters/      Generated runtime files for the CodeCrafters harness
+src/            Shell implementation
+shell.sh        Wrapper script that builds and runs the shell
 ```
 
 ---
 
 ## What I Am Learning
 
-Building a shell is teaching me concepts that rarely come up in typical backend CRUD work. Reading input character by character makes the difference between buffered and unbuffered I/O concrete in a way reading about it never did. Spawning external processes through `System.Diagnostics.Process` taught me how parent and child processes share file descriptors, how exit codes propagate, and why signal handling is more subtle than it looks. Even simple parsing for quoted strings turns out to involve state machines that are useful far beyond shells.
+Building a shell surfaces concepts that rarely come up in typical backend work. Reading input character by character makes the difference between buffered and unbuffered I/O concrete in a way reading about it never did. Spawning external processes through `System.Diagnostics.Process` exposes how parent and child processes share file descriptors, how exit codes propagate, and why signal handling is subtler than it appears. Even parsing quoted strings turns out to involve small state machines that show up in far more places than shells.
 
-These are transferable lessons. Every backend system I work on in the future will have some version of these same primitives underneath, and I understand them better now than I did before this project.
+These are transferable lessons. Every backend system I work on in the future will have some version of these same primitives underneath, and I understand them better now than I did before.
 
 ---
 
 ## Roadmap
 
-Short term goals beyond the CodeCrafters stages:
+Beyond the core feature set:
 
-* Add a suite of my own unit tests independent of the CodeCrafters test runner
+* A suite of unit tests independent of the external test harness
 * Refactor the command dispatch into a clean interpreter pattern once all builtins are in
-* Publish a short writeup on the parsing approach once redirection is implemented
+* A short writeup on the parsing approach once redirection is implemented
 * Benchmark startup and per command latency against bash and zsh
 
 ---
@@ -128,12 +123,6 @@ I am Julio Quezada, a backend .NET developer from El Salvador with experience bu
 
 ---
 
-## Acknowledgments
-
-Challenge specification and test harness provided by [CodeCrafters](https://codecrafters.io/). Implementation is entirely my own.
-
----
-
 ## License
 
-This repository is based on the CodeCrafters shell starter template. See the CodeCrafters documentation for licensing details. My implementation contributions are available under the MIT license.
+The scaffolding for this project is based on a starter template from [CodeCrafters](https://codecrafters.io/). All implementation code is my own and released under the MIT license.
