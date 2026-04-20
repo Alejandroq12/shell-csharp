@@ -47,7 +47,6 @@ class Program
                   {
                     if (file.Contains(inputToArray[1]))
                     {
-                      Console.WriteLine($"This is my command!!!! Command: {inputToArray[1]}");
                       if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                       {
                         UnixFileMode mode = File.GetUnixFileMode(file);
