@@ -22,12 +22,14 @@ class Program
       }
       else if (inputToArray[0] == "type" && inputToArray.Length > 1)
       {
+        bool invalidCommand = true;
 
         if (inputToArray[1] == "echo" || inputToArray[1] == "exit" || inputToArray[1] == "type")
         {
           Console.WriteLine($"{inputToArray[1]} is a shell builtin");
+          invalidCommand = false;
         }
-        else if (inputToArray[0] == "type")
+        if (inputToArray[0] == "type")
         {
           string environmentVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
 
@@ -54,6 +56,7 @@ class Program
                       if (isExecutable)
                       {
                         Console.WriteLine($"{inputToArray[1]} is {file}");
+                        invalidCommand = false;
                       }
                     }
 
@@ -64,6 +67,7 @@ class Program
                       if (executableExtensions.Contains(ext))
                       {
                         Console.WriteLine($"{inputToArray[1]} is {file}");
+                        invalidCommand = false;
                       }
                     }
                   }
@@ -75,6 +79,10 @@ class Program
               }
             }
           }
+        }
+        if(invalidCommand)
+        {
+          Console.WriteLine($"{inputToArray[1]}: not found");
         }
       }
       else
