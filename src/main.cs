@@ -8,7 +8,8 @@ class Program
     {
       Console.Write("$ ");
       string? input = Console.ReadLine();
-      string[] inputToArray = input.Split(" ");
+
+      string[] inputToArray = !string.IsNullOrEmpty(input) ? input.Split(" ") : [" "];
 
       if (input == "exit")
       {
@@ -21,68 +22,61 @@ class Program
       }
       else if (inputToArray[0] == "type" && inputToArray.Length > 1)
       {
-        switch (inputToArray[1])
+
+        if (inputToArray[1] == "echo" || inputToArray[1] == "exit" || inputToArray[1] == "type")
         {
-          case "echo":
-            Console.WriteLine($"{inputToArray[1]} is a shell builtin");
-            break;
-          case "exit":
-            Console.WriteLine($"{inputToArray[1]} is a shell builtin");
-            break;
-          case "type":
-            Console.WriteLine($"{inputToArray[1]} is a shell builtin");
-            break;
-          default:
-            string environmentVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+          Console.WriteLine($"{inputToArray[1]} is a shell builtin");
+        }
+        else if (inputToArray[0] == "type")
+        {
+          string environmentVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
 
-            string[] directories = environmentVariable.Split(Path.PathSeparator);
+          string[] directories = environmentVariable.Split(Path.PathSeparator);
 
-            foreach (string path in directories)
+          foreach (string path in directories)
+          {
+            if (Directory.Exists(path))
             {
-              if (Directory.Exists(path))
+              try
               {
-                try
+                foreach (string file in Directory.GetFiles(path))
                 {
-                  foreach (string file in Directory.GetFiles(path))
+                  string[] folders = file.Split("/");
+
+                  if (folders[^1] == inputToArray[1])
                   {
-                    if (file.Contains(inputToArray[1]))
+                    if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                     {
-                      if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                      UnixFileMode mode = File.GetUnixFileMode(file);
+                      bool isExecutable = mode.HasFlag(UnixFileMode.UserExecute) ||
+                                         mode.HasFlag(UnixFileMode.GroupExecute) ||
+                                         mode.HasFlag(UnixFileMode.OtherExecute);
+                      if (isExecutable)
                       {
-                        UnixFileMode mode = File.GetUnixFileMode(file);
-                        bool isExecutable = mode.HasFlag(UnixFileMode.UserExecute) ||
-                                           mode.HasFlag(UnixFileMode.GroupExecute) ||
-                                           mode.HasFlag(UnixFileMode.OtherExecute);
-                        if (isExecutable)
-                        {
-                          Console.WriteLine($"{inputToArray[1]} is {file}");
-                        }
-                        // Console.WriteLine($"mode is {mode}");
-                        // Console.WriteLine($"isExecutable is {isExecutable}");
-                      } else if (OperatingSystem.IsWindows())
+                        Console.WriteLine($"{inputToArray[1]} is {file}");
+                      }
+                    }
+
+                    if (OperatingSystem.IsWindows())
+                    {
+                      string[] executableExtensions = Environment.GetEnvironmentVariable("PATHEX")?.Split(";") ?? new[] { ".EXE", ".BAT", ".CMD", ".COM" };
+                      string ext = Path.GetExtension(file).ToUpperInvariant();
+                      if (executableExtensions.Contains(ext))
                       {
-                        string[] executableExtensions = Environment.GetEnvironmentVariable("PATHEX")?.Split(";") ?? new[] { ".EXE", ".BAT", ".CMD", ".COM"};
-                        string ext = Path.GetExtension(file).ToUpperInvariant();                        
-                        if (executableExtensions.Contains(ext))
-                        {
-                          Console.WriteLine($"{inputToArray[1]} is {file}");
-                        }
+                        Console.WriteLine($"{inputToArray[1]} is {file}");
                       }
                     }
                   }
                 }
-                catch (UnauthorizedAccessException)
-                {
-                  Console.WriteLine("Error");
-                }
+              }
+              catch (InvalidOperationException ex)
+              {
+                Console.WriteLine(ex.Message);
               }
             }
 
-            //Console.WriteLine($"{inputToArray[1]}: HERE I SHOULD IMPLEMENT THE SEARH IN EVERY DIRECTORY");
-            //Console.WriteLine($"PATH - environmentVariable: {environmentVariable}");
-            Console.WriteLine($"{inputToArray[1]}: not found");
-
-            break;
+          }
+          Console.WriteLine($"{inputToArray[1]}: not found");
         }
       }
       else
