@@ -74,9 +74,7 @@ class Program
                 Console.WriteLine(ex.Message);
               }
             }
-
           }
-          Console.WriteLine($"{inputToArray[1]}: not found");
         }
       }
       else
