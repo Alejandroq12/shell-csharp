@@ -28,8 +28,7 @@ class Program
         {
           Console.WriteLine($"{inputToArray[1]} is a shell builtin");
           invalidCommand = false;
-        }
-        if (inputToArray[0] == "type")
+        }else if (inputToArray[0] == "type")
         {
           string environmentVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
 
